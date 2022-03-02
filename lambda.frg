@@ -64,6 +64,13 @@ pred combinator {
     }
 }
 
+test expect {
+    emptyIsSat: {} is sat
+    noFreeInCombinator: {
+        wellFormed
+        combinator
+    } for 8 Term for {} is sat
+}
 
 BigCombinator: run {
     wellFormed
