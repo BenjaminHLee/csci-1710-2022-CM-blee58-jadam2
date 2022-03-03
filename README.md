@@ -33,3 +33,15 @@ A normal form is a form in which a lambda term cannot be further simplified via 
 It is well-known that the untyped lambda calculus is not weakly normalizing. The most well-known exemplifying term is [the Y combinator](https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed-point_combinators_in_lambda_calculus). However, our model indicates that our rules *are* weakly normalizing!
 
 We suspect that this is due to bounds limitations: the usual Y combinator takes no less than 14 `Terms` to express, and its one-step iteration requires at least 20. However, we'd love to see someone with sufficient time and compute power evaluate a Y combinator with our model.
+
+## Interpreting the Sterling Visualizer's Output
+
+We recommend using the theme in lambda_theme.json to help declutter the visualizer's outputs, as they can be quite complex.
+
+[A visualized Term corresponding to the lambda term *λx.(λy.(λz.y) x)*](img/simple_term.png)
+
+Circles correspond to `Var`iables, squares corespond to `App`lications, and rectangles correspond to `Abs`tractions (function definitions). Thick blue lines indicate variable definitions — note that all of them come from function definitions and lead to variables.
+
+[A visualized Term corresponding to the lambda term *λx.(x (x (x (λy.x x))))*](img/evaluated_term.png)
+
+The fuschia line denotes an *evaluation* — the original term reduces to the pointee via β-reduction. In the above example, this means that the innermost *(λy.x x)* reduces to *x*.
