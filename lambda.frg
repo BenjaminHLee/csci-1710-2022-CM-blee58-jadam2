@@ -1,16 +1,95 @@
 #lang forge
 
 -- Syntax: terms
-abstract sig Term {}
+abstract sig Term {
+    size: one Int
+}
 
 -- Forge doesn't allow repeated field names, so manually disambiguate
 sig Var extends Term {} 
 sig Abs extends Term {x: one Var, term: one Term}
 sig App extends Term {l_term, r_term: one Term}
 
+sig Eval {
+    evaluated : func Term -> Term,
+    // Same order used in the notation, i.e. term[var := replacement] = result
+    substituted : pfunc Term -> Var -> Term -> Term
+}
 
 fun allSubterms[t: Term]: set Term {
     t.^(x + term + l_term + r_term)
+}
+
+pred termSize {
+    all v : Var | v.size = 1
+    all abs : Abs | abs.size = add[abs.size, 1]
+    all app : App | app.size = add[1, app.l_term.size, app.r_term.size]
+}
+
+
+pred substitutions {
+    // for all substitutions it must hold that
+    all replacement : Term, variable : Var | {
+        all input : Var, output : Term | Eval.substituted[input, variable, replacement] = output implies {
+            {input = variable => output = replacement else output = input}
+        }
+        all input : Abs, output : Term | Eval.substituted[input, variable, replacement] = output implies {
+            // Abstractions substitute  to abstractions
+            output in Abs
+            // Substitution is applied to inner term
+            output.term = Eval.substituted[input.term, variable, replacement]
+        }
+        all input: App, output: Term | Eval.substituted[input, variable, replacement] = output implies {
+            // Applications substitute to applications
+            output in App
+
+            // recursively substitute each subterm
+            output.l_term = Eval.substituted[input.l_term, variable, replacement]
+            output.r_term = Eval.substituted[input.r_term, variable, replacement]
+        }
+    }
+}
+
+pred betaReduction[input : Term, output : Term] {
+    input in App
+    input.l_term in Abs
+    output = Eval.substituted[input.l_term.term, input.l_term.x, input.r_term]
+}
+
+pred reductions {
+    // For any term that reduces to another it must hold that
+    all left, right : Term | Eval.evaluated[left] = right implies {
+        // it got there by reduction
+        (betaReduction[left, right]
+        // we can expand this later if we wan to allow alpha conversion for instance
+        
+        // Interesting question: should we allow these no-op "reductions"? If not `evaluated` must be `pfunc`
+        or left = right
+        )
+    }
+}
+
+pred evaluatesTo[from : Term, to : Term] {
+    reachable[to, from, evaluated] or from = to
+}
+
+pred weakNormalize[input : Term] {
+    // there exists a term
+    some t : Term | {
+        // that our input term can reduce to (or is itself)
+        evaluatesTo[input, t]
+
+        // such that there is no other term
+        no t2 : Term | {
+            t2 != t
+
+            // which is smaller
+            t2.size < t.size
+            // and the input term can evalaute to
+            evaluatesTo[input, t]
+        }
+
+    }
 }
 
 pred wellFormed {
@@ -70,7 +149,31 @@ test expect {
         wellFormed
         combinator
     } for 8 Term for {} is sat
+
+    reductionsAreSat: {
+        wellFormed
+        combinator
+        reductions
+        substitutions
+        termSize
+    } for 8 Term is sat
+
+    weaklyNormalizing: {
+        wellFormed
+        combinator
+        reductions
+        substitutions
+        termSize
+        all t : Term | weakNormalize[t]
+    } for 8 Term is theorem
 }
+
+run {
+    wellFormed
+    combinator
+    reductions
+    substitutions
+} for exactly 8 Term
 
 BigCombinator: run {
     wellFormed
