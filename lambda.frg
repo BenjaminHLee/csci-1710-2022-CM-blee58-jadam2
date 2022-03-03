@@ -1,4 +1,4 @@
-#lang forge
+#lang forge "cm" "srl35btbyptizwmm"
 
 -- Syntax: terms
 abstract sig Term {
