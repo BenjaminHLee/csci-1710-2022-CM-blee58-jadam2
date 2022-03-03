@@ -25,3 +25,11 @@ The model also includes a notion of term `size`, which simply corresponds to the
 ## Substitution, Evaluation, and Reduction
 
 While generating and validating lambda terms is interesting in and of itself, we're also interested in exploring the substitution, application, and evaluation of such terms. The `Eval` sig and its `substituted` pfunc represent valid substitutions of subexpressions, which the `betaReduction` predicate uses to constrain reductions to those that constitute valid β-reductions (which are analogous to a single step of function application). The `evaluated` set of a `Term` corresponds to the `Term`s that can be reached via evaluation of the `Term` in question.
+
+## Weak Normalization
+
+A normal form is a form in which a lambda term cannot be further simplified via (β-)reductions. A calculus is said to feature "weak normalization" if for every term it is possible to perform some series of reductions to arrive at a normal form. 
+
+It is well-known that the untyped lambda calculus is not weakly normalizing. The most well-known exemplifying term is [the Y combinator](https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed-point_combinators_in_lambda_calculus). However, our model indicates that our rules *are* weakly normalizing!
+
+We suspect that this is due to bounds limitations: the usual Y combinator takes no less than 14 `Terms` to express, and its one-step iteration requires at least 20. However, we'd love to see someone with sufficient time and compute power evaluate a Y combinator with our model.
