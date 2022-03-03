@@ -40,7 +40,7 @@ We recommend using the theme in lambda_theme.json to help declutter the visualiz
 
 [A visualized Term corresponding to the lambda term *λx.(λy.(λz.y) x)*](img/simple_term.png)
 
-Circles correspond to `Var`iables, squares corespond to `App`lications, and rectangles correspond to `Abs`tractions (function definitions). Thick blue lines indicate variable definitions — note that all of them come from function definitions and lead to variables.
+Circles correspond to `Var`iables, squares correspond to `App`lications, and rectangles correspond to `Abs`tractions (function definitions). Thick blue lines indicate variable definitions — note that all of them come from function definitions and lead to variables.
 
 [A visualized Term corresponding to the lambda term *λx.(x (x (x (λy.x x))))*](img/evaluated_term.png)
 
