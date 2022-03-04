@@ -60,7 +60,11 @@ pred reductions {
     // For any term that reduces to another it must hold that
     all left, right : Term | right in left.evaluated implies {
         // it got there by reduction
-        (betaReduction[left, right]
+        (some subt, subtReduced : Term | {
+            subt in allSubterms[left]  
+            subtReduced in allSubterms[right]
+            betaReduction[subt, subtReduced]
+        }
         // we can expand this later if we wan to allow alpha conversion for instance
         
         // Interesting question: should we allow these no-op "reductions"? If not `evaluated` must be `pfunc`
@@ -70,7 +74,7 @@ pred reductions {
 }
 
 pred evaluatesTo[from : Term, to : Term] {
-    reachable[to, from, evaluated] or from = to
+    reachable[to, from, evaluated]
 }
 
 pred weakNormalize[input : Term] {
@@ -97,17 +101,20 @@ pred weakNormalize[input : Term] {
 
 pred wellFormed {
     -- no cycles
-    all t: Term | t not in allSubterms[t]
 
     -- single root term
     // some t: Term | all subterm: Term | subterm in allSubterms[t] or t = subterm
 
-    one root : Term |
-    all t : Term | some other : Term | (
-        t = root
-        or t in allSubterms[other]
-        or (t in other.evaluated and t != other)
-    )
+    one root : Term | {
+        // No cycles in the root
+        root not in allSubterms[root]
+
+        all t : Term | some other : Term | (
+            t = root
+            or t in allSubterms[other]
+            or (t in other.evaluated and t != other)
+        )
+    }
 
     -- variables should only be bound once
     all v: Var | no disj t1, t2: Abs | t1.x = v and t2.x = v
@@ -153,6 +160,13 @@ pred combinator {
     }
 }
 
+pred LambdaCalculus {
+    wellFormed
+    combinator
+    reductions
+    substitutions
+}
+
 test expect {
     emptyIsSat: {} is sat
     noFreeInCombinator: {
@@ -167,16 +181,21 @@ test expect {
     } for 8 Term is sat
 }
 
+run {
+    LambdaCalculus
+    #evaluated > 3
+} for exactly 8 Term
+
 weaklyNormalizing: run {
     wellFormed
     combinator
     reductions
     substitutions
     termSize
-    some disj t1, t2: Term | t2 in t1.evaluated
-} for exactly 8 Term
+    not (all t: Term | weakNormalize[t])
+} for exactly 21 Term
 
-test expect{
+expect{
     substitutionsAreSat: {
         wellFormed
         combinator
@@ -190,7 +209,9 @@ test expect{
         substitutions
         termSize
     } for 8 Term is sat
+}
 
+test expect {
     weaklyNormalizing: {
         {
             wellFormed
